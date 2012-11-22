@@ -19,8 +19,8 @@
 
 #import "AMQPChannel.h"
 
-# import <amqp.h>
-# import <amqp_framing.h>
+# import "amqp.h"
+# import "amqp_framing.h"
 
 @implementation AMQPChannel
 

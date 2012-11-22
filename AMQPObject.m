@@ -20,8 +20,8 @@
 #import "AMQPObject.h"
 
 # import <stdio.h>
-# import <amqp.h>
-# import <amqp_framing.h>
+# import "amqp.h"
+# import "amqp_framing.h"
 
 # define AMQP_BYTES_TO_NSSTRING(x) [[NSString alloc] initWithBytes:x.bytes length:x.len encoding:NSUTF8StringEncoding]
 
@@ -39,9 +39,9 @@
 			break;
 			
 		case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-			if(reply.library_errno)
+			if(reply.library_error)
 			{
-				return [NSString stringWithUTF8String:strerror(reply.library_errno)];
+				return [NSString stringWithUTF8String:strerror(reply.library_error)];
 			}
 			else
 			{

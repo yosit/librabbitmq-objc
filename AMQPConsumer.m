@@ -19,8 +19,8 @@
 
 #import "AMQPConsumer.h"
 
-# import <amqp.h>
-# import <amqp_framing.h>
+# import "amqp.h"
+# import "amqp_framing.h"
 # import <string.h>
 # import <stdlib.h>
 
@@ -41,7 +41,7 @@
 		channel = [theChannel retain];
 		queue = [theQueue retain];
 		
-		amqp_basic_consume_ok_t *response = amqp_basic_consume(channel.connection.internalConnection, channel.internalChannel, queue.internalQueue, AMQP_EMPTY_BYTES, !local, !ack, exclusive);
+		amqp_basic_consume_ok_t *response = amqp_basic_consume(channel.connection.internalConnection, channel.internalChannel, queue.internalQueue, AMQP_EMPTY_BYTES, !local, !ack, exclusive, amqp_empty_table);
 		[channel.connection checkLastOperation:@"Failed to start consumer"];
 		
 		consumer = amqp_bytes_malloc_dup(response->consumer_tag);

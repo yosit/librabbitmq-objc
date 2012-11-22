@@ -19,8 +19,8 @@
 
 #import "AMQPConnection.h"
 
-# import <amqp.h>
-# import <amqp_framing.h>
+# import "amqp.h"
+# import "amqp_framing.h"
 # import <unistd.h>
 
 # import "AMQPChannel.h"
