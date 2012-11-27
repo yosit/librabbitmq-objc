@@ -28,6 +28,16 @@
 # import "AMQPQueue.h"
 # import "AMQPMessage.h"
 
+#define ERROR_NO_MEMORY 1
+#define ERROR_BAD_AMQP_DATA 2
+#define ERROR_UNKNOWN_CLASS 3
+#define ERROR_UNKNOWN_METHOD 4
+#define ERROR_GETHOSTBYNAME_FAILED 5
+#define ERROR_INCOMPATIBLE_AMQP_VERSION 6
+#define ERROR_CONNECTION_CLOSED 7
+#define ERROR_BAD_AMQP_URL 8
+#define ERROR_MAX 8
+
 @implementation AMQPConsumer
 
 @synthesize internalConsumer = consumer;
@@ -78,18 +88,27 @@
 		
 		// Frame #1: method frame with method basic.deliver
 		result = amqp_simple_wait_frame(channel.connection.internalConnection, &frame);
-		if(result <= 0) { return nil; }
+		if(result < 0) {
+            NSLog(@"result = %d", result);
+            return nil;
+        }
 		
-		if(frame.frame_type != AMQP_FRAME_METHOD || frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD) { continue; }
+		if(frame.frame_type != AMQP_FRAME_METHOD || frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD) {
+            continue;
+        }
 		
 		delivery = (amqp_basic_deliver_t*)frame.payload.method.decoded;
 		
 		// Frame #2: header frame containing body size
 		result = amqp_simple_wait_frame(channel.connection.internalConnection, &frame);
-		if(result <= 0) { return nil; }
+		if(result < 0) {
+            NSLog(@"result = %d", result);
+            return nil;
+        }
 		
 		if(frame.frame_type != AMQP_FRAME_HEADER)
 		{
+            NSLog(@"frame.frame_type != AMQP_FRAME_HEADER");
 			return nil;
 		}
 		
@@ -103,10 +122,15 @@
 		while(receivedBytes < bodySize)
 		{
 			result = amqp_simple_wait_frame(channel.connection.internalConnection, &frame);
-			if(result <= 0) { return nil; }
+			if(result < 0) {
+                NSLog(@"result = %d", result);
+                return nil;
+            }
 			
 			if(frame.frame_type != AMQP_FRAME_BODY)
 			{
+                NSLog(@"frame.frame_type != AMQP_FRAME_BODY");
+
 				return nil;
 			}
 			

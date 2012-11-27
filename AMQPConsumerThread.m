@@ -44,19 +44,14 @@
 
 - (void)main
 {
-	NSAutoreleasePool *localPool;
-	
 	while(![self isCancelled])
 	{
-		localPool = [[NSAutoreleasePool alloc] init];
-		
-		AMQPMessage *message = [consumer pop];
-		if(message)
-		{
-			[delegate performSelectorOnMainThread:@selector(amqpConsumerThreadReceivedNewMessage:) withObject:message waitUntilDone:NO];
-		}
-		
-		[localPool drain];
+        @autoreleasepool {
+            AMQPMessage *message = [consumer pop];
+            if(message) {
+                [delegate performSelectorOnMainThread:@selector(amqpConsumerThreadReceivedNewMessage:) withObject:message waitUntilDone:NO];
+            }
+        }
 	}
 }
 

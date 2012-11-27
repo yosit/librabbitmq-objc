@@ -25,6 +25,9 @@
 # import "config.h"
 # import "AMQPChannel.h"
 
+#define AMQP_EXCHANGE_TYPE_DIRECT   @"direct"
+#define AMQP_EXCHANGE_TYPE_FANOUT   @"fanout"
+#define AMQP_EXCHANGE_TYPE_TOPIC    @"topic"
 @implementation AMQPExchange
 
 @synthesize internalExchange = exchange;
@@ -33,7 +36,7 @@
 {
 	if(self = [super init])
 	{
-		amqp_exchange_declare(theChannel.connection.internalConnection, theChannel.internalChannel, amqp_cstring_bytes([theName UTF8String]), amqp_cstring_bytes([theType UTF8String]), passive, durable, autoDelete, AMQP_EMPTY_TABLE);
+		amqp_exchange_declare(theChannel.connection.internalConnection, theChannel.internalChannel, amqp_cstring_bytes([theName UTF8String]), amqp_cstring_bytes([theType UTF8String]), passive, durable, AMQP_EMPTY_TABLE);
 		
 		[theChannel.connection checkLastOperation:@"Failed to declare exchange"];
 		
