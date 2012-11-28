@@ -29,16 +29,13 @@
 
 @interface AMQPConsumerThread : NSThread
 {
-	AMQPConsumer *consumer;
-	
-	NSObject<AMQPConsumerThreadDelegate> *delegate;
 }
 
 @property (assign) NSObject<AMQPConsumerThreadDelegate> *delegate;
 
-- (id)initWithConsumer:(AMQPConsumer*)theConsumer;
-- (void)dealloc;
-
+- (id)initWithConfiguration:(NSDictionary *)configuration exchangeKey:(NSString *)exchangeKey topic:(NSString *)topic delegate:(id)delegate callbackQueue:(dispatch_queue_t)callbackQueue;
+//- (id)initWithChannel:(AMQPChannel *)channel callbackQueue:(dispatch_queue_t)callbackQueue;
+//- (id)initWithConsumer:(AMQPConsumer *)consumer callbackQueue:(dispatch_queue_t)callbackQueue;
 - (void)main;
 
 @end

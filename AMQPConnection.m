@@ -51,6 +51,8 @@
 - (void)connectToHost:(NSString*)host onPort:(int)port
 {
 	socketFD = amqp_open_socket([host UTF8String], port);
+    fcntl(socketFD, F_SETFL, O_NONBLOCK);
+    fcntl(socketFD, F_SETFL, O_ASYNC);
 	
 	if(socketFD < 0)
 	{
