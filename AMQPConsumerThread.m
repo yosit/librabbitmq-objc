@@ -39,13 +39,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface AMQPConsumerThread()
 
-- (void)_setup;
+- (BOOL)_setup:(NSError **)error;
 - (void)_tearDown;
 
-- (void)_connect;
-- (void)_setupExchange;
-- (void)_setupConsumerQueue;
-- (void)_setupConsumer;
+- (BOOL)_connect:(NSError **)error;
+- (BOOL)_setupExchange:(NSError **)error;
+- (BOOL)_setupConsumerQueue:(NSError **)error;
+- (BOOL)_setupConsumer:(NSError **)error;
 
 @end
 
@@ -64,7 +64,6 @@
     AMQPConsumer        *_consumer;
     
     dispatch_queue_t    _callbackQueue;
-	AMQPConsumer        *consumer;
     
     
 	NSObject<AMQPConsumerThreadDelegate> *delegate;
@@ -113,57 +112,58 @@
 ////////////////////////////////////////////////////////////////////////////////
 - (void)main
 {
-    CTXLogVerbose(CTXLogContextMessageBroker, @"<starting: consumer_thread: (%p) topic: %@>", self, _topic);
-    [self _setup];
-    CTXLogVerbose(CTXLogContextMessageBroker, @"<started: consumer_thread: (%p) topic: %@>", self, _topic);
-    
-	while(![self isCancelled]) {
-        @autoreleasepool {
-            AMQPMessage *message = [self _consume];
-            if(message) {
-                CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread: (%p) topic: %@ received message>", self, _topic);
-                dispatch_async(_callbackQueue, ^{
-                    [delegate amqpConsumerThreadReceivedNewMessage:message];
-                });
+    @autoreleasepool {
+        CTXLogVerbose(CTXLogContextMessageBroker, @"<starting: consumer_thread: (%p) topic: %@>", self, _topic);
+        NSError *error = nil;
+        if(![self _setup:&error]) {
+            CTXLogError(CTXLogContextMessageBroker, @"<starting: consumer_thread: (%p) topic: %@ :: failed to start>", self, _topic);
+            CTXLogError(CTXLogContextMessageBroker, @"<starting: consumer_thread: (%p) topic: %@ :: error %@>", self, _topic, error);
+            dispatch_sync(_callbackQueue, ^{
+                [delegate amqpConsumerThread:self didFailWithError:error];
+            });
+            return;
+        }
+        CTXLogVerbose(CTXLogContextMessageBroker, @"<started: consumer_thread: (%p) topic: %@>", self, _topic);
+        
+        while(![self isCancelled]) {
+            @autoreleasepool {
+                AMQPMessage *message = [self _consume];
+                if(message) {
+                    CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread: (%p) topic: %@ received message>", self, _topic);
+                    dispatch_async(_callbackQueue, ^{
+                        [delegate amqpConsumerThreadReceivedNewMessage:message];
+                    });
+                }
             }
         }
-	}
-
-    CTXLogVerbose(CTXLogContextMessageBroker, @"<stopping: consumer_thread: (%p) topic: %@>", self, _topic);
-    [self _tearDown];
-    CTXLogVerbose(CTXLogContextMessageBroker, @"<stopped: consumer_thread: (%p) topic: %@>", self, _topic);
+        
+        CTXLogVerbose(CTXLogContextMessageBroker, @"<stopping: consumer_thread: (%p) topic: %@>", self, _topic);
+        [self _tearDown];
+        CTXLogVerbose(CTXLogContextMessageBroker, @"<stopped: consumer_thread: (%p) topic: %@>", self, _topic);
+    }
 }
 
 #pragma mark - Private Methods - Setup & Tear down
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-- (void)_setup
+- (BOOL)_setup:(NSError **)error
 {
-    [self _connect];
-    [self _setupExchange];
-    [self _setupConsumerQueue];
-    [self _setupConsumer];
+    if(![self _connect:error])              goto HandleError;
+    if(![self _setupExchange:error])        goto HandleError;
+    if(![self _setupConsumerQueue:error])   goto HandleError;
+    if(![self _setupConsumer:error])        goto HandleError;
+    
+    return YES;
+    
+    HandleError:
+    [self _tearDown];
+    return NO;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-- (void)_tearDown
-{
-    [_queue deleteQueue];
-    [_channel close];
-    [_connection disconnect];
-
-    [_consumer release], _consumer = nil;
-    [_queue release], _queue = nil;
-    [_exchange release], _exchange = nil;
-    [_channel release], _channel = nil;
-    [_connection release], _connection = nil;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-- (void)_connect
+- (BOOL)_connect:(NSError **)outError
 {
     NSString *host      = [_configuration objectForKey:@"host"];
     int port            = [[_configuration objectForKey:@"port"] intValue];
@@ -176,7 +176,7 @@
 
         _connection = [[AMQPConnection alloc] init];
         [_connection connectToHost:host onPort:port];
-        CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic: %@ :: connected>", self, _topic);
+        CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic: %@ :: connected!>", self, _topic);
         
         CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic: %@ :: authenticating user (%@)...>", self, _topic, username);
         [_connection loginAsUser:username withPassword:password onVHost:vhost];
@@ -185,48 +185,107 @@
         _channel = [[_connection openChannel] retain];
     }
     @catch(NSException *exception) {
-//        if(outError != NULL) {
-//            NSInteger errorCode = -1010;
-//            NSDictionary *userInfo = (@{
-//                                      NSLocalizedDescriptionKey         : exception.name,
-//                                      NSLocalizedFailureReasonErrorKey  : exception.reason});
-//            NSError *error = [NSError errorWithDomain:@"com.ef.smart.classroom.broker.amqp" code:errorCode userInfo:userInfo];
-//            *outError = error;
-//        }
-//        return NO;
+        if(outError != NULL) {
+            NSInteger errorCode = -1010;
+            NSDictionary *userInfo = (@{
+                                      NSLocalizedDescriptionKey         : exception.name,
+                                      NSLocalizedFailureReasonErrorKey  : exception.reason});
+            NSError *error = [NSError errorWithDomain:@"com.ef.smart.classroom.broker.amqp" code:errorCode userInfo:userInfo];
+            *outError = error;
+        }
+        return NO;
     }
+    return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-- (void)_setupExchange
+- (BOOL)_setupExchange:(NSError **)outError
 {
-    _exchange = [[AMQPExchange alloc] initTopicExchangeWithName:_exchangeKey
-                                                      onChannel:_channel
-                                                      isPassive:NO
-                                                      isDurable:NO
-                                                getsAutoDeleted:YES];
+    @try {
+        _exchange = [[AMQPExchange alloc] initTopicExchangeWithName:_exchangeKey
+                                                          onChannel:_channel
+                                                          isPassive:NO
+                                                          isDurable:NO
+                                                    getsAutoDeleted:YES];
+    }
+    @catch(NSException *exception) {
+        if(outError != NULL) {
+            NSInteger errorCode = -1010;
+            NSDictionary *userInfo = (@{
+                                      NSLocalizedDescriptionKey         : exception.name,
+                                      NSLocalizedFailureReasonErrorKey  : exception.reason});
+            NSError *error = [NSError errorWithDomain:@"com.ef.smart.classroom.broker.amqp" code:errorCode userInfo:userInfo];
+            *outError = error;
+        }
+    }
+    return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-- (void)_setupConsumerQueue
+- (BOOL)_setupConsumerQueue:(NSError **)outError
 {
-    _queue = [[AMQPQueue alloc] initWithName:kAutoGeneratedQueueName
-                                   onChannel:_channel
-                                   isPassive:NO
-                                 isExclusive:NO
-                                   isDurable:NO
-                             getsAutoDeleted:YES];
-    [_queue bindToExchange:_exchange withKey:_topic];
+    @try {
+        _queue = [[AMQPQueue alloc] initWithName:kAutoGeneratedQueueName
+                                       onChannel:_channel
+                                       isPassive:NO
+                                     isExclusive:NO
+                                       isDurable:NO
+                                 getsAutoDeleted:YES];
+        [_queue bindToExchange:_exchange withKey:_topic];
+    }
+    @catch (NSException *exception) {
+        if(outError != NULL) {
+            NSInteger errorCode = -1010;
+            NSDictionary *userInfo = (@{
+                                      NSLocalizedDescriptionKey         : exception.name,
+                                      NSLocalizedFailureReasonErrorKey  : exception.reason});
+            NSError *error = [NSError errorWithDomain:@"com.ef.smart.classroom.broker.amqp" code:errorCode userInfo:userInfo];
+            *outError = error;
+        }
+        return NO;
+    }
+    return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-- (void)_setupConsumer
+- (BOOL)_setupConsumer:(NSError **)outError
 {
-    _consumer = [_queue startConsumerWithAcknowledgements:NO isExclusive:NO receiveLocalMessages:NO];
+    @try {
+        _consumer = [_queue startConsumerWithAcknowledgements:NO isExclusive:NO receiveLocalMessages:NO];
+    }
+    @catch (NSException *exception) {
+        if(outError != NULL) {
+            NSInteger errorCode = -1010;
+            NSDictionary *userInfo = (@{
+                                      NSLocalizedDescriptionKey         : exception.name,
+                                      NSLocalizedFailureReasonErrorKey  : exception.reason});
+            NSError *error = [NSError errorWithDomain:@"com.ef.smart.classroom.broker.amqp" code:errorCode userInfo:userInfo];
+            *outError = error;
+        }
+        return NO;
+    }
+    return YES;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+- (void)_tearDown
+{
+    [_queue deleteQueue];
+    [_channel close];
+    [_connection disconnect];
+    
+    [_consumer release], _consumer = nil;
+    [_queue release], _queue = nil;
+    [_exchange release], _exchange = nil;
+    [_channel release], _channel = nil;
+    [_connection release], _connection = nil;
+}
+
+#pragma mark - Private Methods - Message consuming loop
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,8 +319,8 @@
                 struct timeval timeout;
                 
                 /* Wait upto a half a second. */
-                timeout.tv_sec = 0;
-                timeout.tv_usec = 500000;
+                timeout.tv_sec = 1;
+                timeout.tv_usec = 0;
                 
                 ret = select(sock+1, &read_flags, NULL, NULL, &timeout);
                 
@@ -341,4 +400,5 @@
 	
 	return message;
 }
+
 @end
