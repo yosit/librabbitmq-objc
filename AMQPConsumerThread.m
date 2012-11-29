@@ -84,77 +84,7 @@
     return self;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//- (id)initWithChannel:(AMQPChannel *)channel callbackQueue:(dispatch_queue_t)callbackQueue
-//{
-//	if((self = [super init])) {
-//        _channel = [channel retain];
-//        if(!callbackQueue) {
-//            callbackQueue = dispatch_get_main_queue();
-//        }
-//        dispatch_retain(callbackQueue);
-//        _callbackQueue = callbackQueue;
-//	}
-//	return self;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//- (id)initWithConsumer:(AMQPConsumer *)theConsumer callbackQueue:(dispatch_queue_t)callbackQueue
-//{
-//	if((self = [super init])) {
-//		consumer = [theConsumer retain];
-//
-//        if(!callbackQueue) {
-//            callbackQueue = dispatch_get_main_queue();
-//        }
-//        dispatch_retain(callbackQueue);
-//        _callbackQueue = callbackQueue;
-//	}
-//	return self;
-//}
-
 #pragma mark - NSThread
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//- (void)main
-//{
-//    CTXLogVerbose(CTXLogContextMessageBroker, @"<started: consumer_thread: (%p)>", self);
-//	while(![self isCancelled]) {
-//        @autoreleasepool {
-//            AMQPMessage *message = [consumer pop];
-//            if(message) {
-//                CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread: (%p) received message>", self);
-//                dispatch_async(_callbackQueue, ^{
-//                    [delegate amqpConsumerThreadReceivedNewMessage:message];
-//                });
-//            }
-//        }
-//	}
-//    CTXLogVerbose(CTXLogContextMessageBroker, @"<stopped: consumer_thread: (%p)>", self);
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//- (void)main
-//{
-//    CTXLogVerbose(CTXLogContextMessageBroker, @"<started: consumer_thread: (%p)>", self);
-//	while(![self isCancelled]) {
-//        @autoreleasepool {
-//            AMQPMessage *message = [self _consume];
-//            if(message) {
-//                CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread: (%p) received message>", self);
-//                dispatch_async(_callbackQueue, ^{
-//                    [delegate amqpConsumerThreadReceivedNewMessage:message];
-//                });
-//            }
-//        }
-//	}
-//    CTXLogVerbose(CTXLogContextMessageBroker, @"<stopped: consumer_thread: (%p)>", self);
-//    
-//}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
