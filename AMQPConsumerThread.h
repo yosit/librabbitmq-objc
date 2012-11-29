@@ -33,9 +33,10 @@
 
 @property (assign) NSObject<AMQPConsumerThreadDelegate> *delegate;
 
-- (id)initWithConfiguration:(NSDictionary *)configuration exchangeKey:(NSString *)exchangeKey topic:(NSString *)topic delegate:(id)delegate callbackQueue:(dispatch_queue_t)callbackQueue;
-//- (id)initWithChannel:(AMQPChannel *)channel callbackQueue:(dispatch_queue_t)callbackQueue;
-//- (id)initWithConsumer:(AMQPConsumer *)consumer callbackQueue:(dispatch_queue_t)callbackQueue;
-- (void)main;
+- (id)initWithConfiguration:(NSDictionary *)configuration
+                exchangeKey:(NSString *)exchangeKey
+                      topic:(NSString *)topic
+                   delegate:(id<AMQPConsumerThreadDelegate>)delegate
+              callbackQueue:(dispatch_queue_t)callbackQueue;
 
 @end

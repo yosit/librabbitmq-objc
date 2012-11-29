@@ -19,12 +19,19 @@
 
 #import <Foundation/Foundation.h>
 
-# import "amqp.h"
+#import "amqp.h"
+#import "AMQPObject.h"
 
-# import "AMQPObject.h"
+////////////////////////////////////////////////////////////////////////////////
+// Exceptions
+////////////////////////////////////////////////////////////////////////////////
+extern NSString *const kAMQPConnectionException;
+extern NSString *const kAMQPLoginException;
+extern NSString *const kAMQPOperationException;
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 @class AMQPChannel;
-
 @interface AMQPConnection : AMQPObject
 {
 	amqp_connection_state_t connection;
@@ -35,15 +42,12 @@
 
 @property (readonly) amqp_connection_state_t internalConnection;
 
-- (id)init;
-- (void)dealloc;
-
-- (void)connectToHost:(NSString*)host onPort:(int)port;
-- (void)loginAsUser:(NSString*)username withPasswort:(NSString*)password onVHost:(NSString*)vhost;
+- (void)connectToHost:(NSString *)host onPort:(int)port;
+- (void)loginAsUser:(NSString *)username withPassword:(NSString *)password onVHost:(NSString *)vhost;
 - (void)disconnect; // all channels have to be closed before closing the connection
 
-- (void)checkLastOperation:(NSString*)context;
+- (void)checkLastOperation:(NSString *)context;
 
-- (AMQPChannel*)openChannel;
+- (AMQPChannel *)openChannel;
 
 @end

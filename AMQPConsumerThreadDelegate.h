@@ -22,8 +22,9 @@
 @class AMQPConsumerThread;
 @class AMQPMessage;
 
-@protocol AMQPConsumerThreadDelegate
+@protocol AMQPConsumerThreadDelegate <NSObject>
 
-- (void)amqpConsumerThreadReceivedNewMessage:(AMQPMessage*)theMessage;
+- (void)amqpConsumerThreadReceivedNewMessage:(AMQPMessage *)message;
+- (void)amqpConsumerThread:(AMQPConsumerThread *)thread didReceiveMessage:(AMQPMessage *)message;
 
 @end

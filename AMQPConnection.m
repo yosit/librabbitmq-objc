@@ -19,12 +19,21 @@
 
 #import "AMQPConnection.h"
 
-# import "amqp.h"
-# import "amqp_framing.h"
-# import <unistd.h>
+#import "amqp.h"
+#import "amqp_framing.h"
+#import <unistd.h>
 
-# import "AMQPChannel.h"
+#import "AMQPChannel.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// Exceptions
+////////////////////////////////////////////////////////////////////////////////
+NSString *const kAMQPConnectionException    = @"AMQPConnectionException";
+NSString *const kAMQPLoginException         = @"AMQPLoginException";
+NSString *const kAMQPOperationException     = @"AMQPException";
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 @implementation AMQPConnection
 
 @synthesize internalConnection = connection;
@@ -56,18 +65,18 @@
 	
 	if(socketFD < 0)
 	{
-		[NSException raise:@"AMQPConnectionException" format:@"Unable to open socket to host %@ on port %d", host, port];
+		[NSException raise:kAMQPConnectionException format:@"Unable to open socket to host %@ on port %d", host, port];
 	}
 
 	amqp_set_sockfd(connection, socketFD);
 }
-- (void)loginAsUser:(NSString*)username withPasswort:(NSString*)password onVHost:(NSString*)vhost
+- (void)loginAsUser:(NSString*)username withPassword:(NSString*)password onVHost:(NSString*)vhost
 {
 	amqp_rpc_reply_t reply = amqp_login(connection, [vhost UTF8String], 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, [username UTF8String], [password UTF8String]);
 	
 	if(reply.reply_type != AMQP_RESPONSE_NORMAL)
 	{
-		[NSException raise:@"AMQPLoginException" format:@"Failed to login to server as user %@ on vhost %@ using password %@: %@", username, vhost, password, [self errorDescriptionForReply:reply]];
+		[NSException raise:kAMQPLoginException format:@"Failed to login to server as user %@ on vhost %@ using password %@: %@", username, vhost, password, [self errorDescriptionForReply:reply]];
 	}
 }
 - (void)disconnect
@@ -76,7 +85,7 @@
 	
 	if(reply.reply_type != AMQP_RESPONSE_NORMAL)
 	{
-		[NSException raise:@"AMQPConnectionException" format:@"Unable to disconnect from host: %@", [self errorDescriptionForReply:reply]];
+		[NSException raise:kAMQPConnectionException format:@"Unable to disconnect from host: %@", [self errorDescriptionForReply:reply]];
 	}
 	
 	close(socketFD);
@@ -88,7 +97,7 @@
 	
 	if(reply.reply_type != AMQP_RESPONSE_NORMAL)
 	{
-		[NSException raise:@"AMQPException" format:@"%@: %@", context, [self errorDescriptionForReply:reply]];
+		[NSException raise:kAMQPOperationException format:@"%@: %@", context, [self errorDescriptionForReply:reply]];
 	}
 }
 

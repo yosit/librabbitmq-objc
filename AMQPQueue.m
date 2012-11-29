@@ -72,4 +72,10 @@
 	return [consumer autorelease];
 }
 
+- (void)deleteQueue
+{
+    amqp_queue_delete(channel.connection.internalConnection, channel.internalChannel, queueName, TRUE, TRUE);
+    [channel.connection checkLastOperation:@"Failed to delete queue"];
+}
+
 @end
