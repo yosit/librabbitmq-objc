@@ -19,7 +19,7 @@
 
 #import <Foundation/Foundation.h>
 
-# import "AMQPConsumerThreadDelegate.h"
+#import "AMQPConsumerThreadDelegate.h"
 
 @class AMQPConnection;
 @class AMQPChannel;

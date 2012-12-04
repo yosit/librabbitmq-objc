@@ -19,13 +19,14 @@
 
 #import <Foundation/Foundation.h>
 
-# import "amqp.h"
-# import "amqp_framing.h"
+#import "amqp.h"
+#import "amqp_framing.h"
 
-# import "AMQPObject.h"
+#import "AMQPObject.h"
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 @class AMQPConsumer;
-
 @interface AMQPMessage : NSObject
 {
 	NSString *body;

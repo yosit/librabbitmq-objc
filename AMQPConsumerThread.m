@@ -254,7 +254,7 @@
 - (BOOL)_setupConsumer:(NSError **)outError
 {
     @try {
-        _consumer = [_queue startConsumerWithAcknowledgements:NO isExclusive:NO receiveLocalMessages:NO];
+        _consumer = [[_queue startConsumerWithAcknowledgements:NO isExclusive:NO receiveLocalMessages:NO] retain];
     }
     @catch (NSException *exception) {
         if(outError != NULL) {
@@ -274,15 +274,22 @@
 ////////////////////////////////////////////////////////////////////////////////
 - (void)_tearDown
 {
-    [_queue deleteQueue];
-    [_channel close];
-    [_connection disconnect];
-    
+    ////////////////////////////////////////////////////////////////////////////////
+    // NOTE: the order for the following operations is important
+    // 1) consumer
+    // 2) queue
+    // 3) exchange
+    // 4) channel
+    // 5) connection
+    ////////////////////////////////////////////////////////////////////////////////
     [_consumer release], _consumer = nil;
-    [_queue release], _queue = nil;
+    [_queue unbindFromExchange:_exchange withKey:_topic];
     [_exchange release], _exchange = nil;
+    [_queue release], _queue = nil;
+    [_channel close];
     [_channel release], _channel = nil;
-    [_connection release], _connection = nil;
+    [_connection disconnect];
+    _connection = nil;
 }
 
 #pragma mark - Private Methods - Message consuming loop
