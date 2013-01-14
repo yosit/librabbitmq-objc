@@ -282,14 +282,19 @@
     // 4) channel
     // 5) connection
     ////////////////////////////////////////////////////////////////////////////////
-    [_consumer release], _consumer = nil;
-    [_queue unbindFromExchange:_exchange withKey:_topic];
-    [_exchange release], _exchange = nil;
-    [_queue release], _queue = nil;
-    [_channel close];
-    [_channel release], _channel = nil;
-    [_connection disconnect];
-    _connection = nil;
+    @try {
+        [_consumer release], _consumer = nil;
+        [_queue unbindFromExchange:_exchange withKey:_topic];
+        [_exchange release], _exchange = nil;
+        [_queue release], _queue = nil;
+        [_channel close];
+        [_channel release], _channel = nil;
+        [_connection disconnect];
+        _connection = nil;
+    }
+    @catch (NSException *exception) {
+        CTXLogError(CTXLogContextMessageBroker, @"<consumer_thread (%p) exception triggered during tear down :: exception (%@) reason (%@)>", self, exception.name, exception.reason);
+    }
 }
 
 #pragma mark - Private Methods - Message consuming loop
