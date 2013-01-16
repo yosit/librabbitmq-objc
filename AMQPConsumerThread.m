@@ -287,10 +287,10 @@
         [_queue unbindFromExchange:_exchange withKey:_topic];
         [_exchange release], _exchange = nil;
         [_queue release], _queue = nil;
-        [_channel close];
+//        [_channel close];
         [_channel release], _channel = nil;
-        [_connection disconnect];
-        _connection = nil;
+//        [_connection disconnect];
+        [_connection release], _connection = nil;
     }
     @catch (NSException *exception) {
         CTXLogError(CTXLogContextMessageBroker, @"<consumer_thread (%p) exception triggered during tear down :: exception (%@) reason (%@)>", self, exception.name, exception.reason);
@@ -347,6 +347,12 @@
 //                    printf("Flag is set\n");
 //                }
             } while (ret == 0 && ![self isCancelled]);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        if([self isCancelled]) {
+            break;
         }
         
 		// a complete message delivery consists of at least three frames:
