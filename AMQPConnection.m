@@ -65,7 +65,8 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 	
 	if(socketFD < 0)
 	{
-		[NSException raise:kAMQPConnectionException format:@"Unable to open socket to host %@ on port %d", host, port];
+        LGLOG(LGFLAG_DEBUG, @"Unable to open socket to host %@ on port %d", host, port);
+//		[NSException raise:kAMQPConnectionException format:@"Unable to open socket to host %@ on port %d", host, port];
 	}
 
 	amqp_set_sockfd(connection, socketFD);
@@ -76,7 +77,8 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 	
 	if(reply.reply_type != AMQP_RESPONSE_NORMAL)
 	{
-		[NSException raise:kAMQPLoginException format:@"Failed to login to server as user %@ on vhost %@ using password %@: %@", username, vhost, password, [self errorDescriptionForReply:reply]];
+                LGLOG(LGFLAG_DEBUG, @"Failed to login to server as user %@ on vhost %@ using password %@: %@", username, vhost, password, [self errorDescriptionForReply:reply]);
+//		[NSException raise:kAMQPLoginException format:@"Failed to login to server as user %@ on vhost %@ using password %@: %@", username, vhost, password, [self errorDescriptionForReply:reply]];
 	}
 }
 - (void)disconnect
@@ -85,7 +87,9 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 	
 	if(reply.reply_type != AMQP_RESPONSE_NORMAL)
 	{
-		[NSException raise:kAMQPConnectionException format:@"Unable to disconnect from host: %@", [self errorDescriptionForReply:reply]];
+        LGLOG(LGFLAG_DEBUG, @"Unable to disconnect from host: %@", [self errorDescriptionForReply:reply]);
+
+//		[NSException raise:kAMQPConnectionException format:@"Unable to disconnect from host: %@", [self errorDescriptionForReply:reply]];
 	}
 	
 	close(socketFD);
@@ -97,7 +101,9 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 	
 	if(reply.reply_type != AMQP_RESPONSE_NORMAL)
 	{
-		[NSException raise:kAMQPOperationException format:@"%@: %@", context, [self errorDescriptionForReply:reply]];
+        LGLOG(LGFLAG_DEBUG, @"%@: %@", context, [self errorDescriptionForReply:reply]);
+
+//		[NSException raise:kAMQPOperationException format:@"%@: %@", context, [self errorDescriptionForReply:reply]];
 	}
 }
 
