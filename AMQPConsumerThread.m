@@ -335,7 +335,9 @@
                 timeout.tv_usec = 0;
                 
                 ret = select(sock+1, &read_flags, NULL, NULL, &timeout);
-                
+                if(ret == -1) {
+                    NSLog(@"!!! select error %s !!!", strerror(errno));
+                }
                 // TODO: ADD ERROR HANDLING HERE
 //                if (ret == -1) {
 //                    printf("select: %s\n", strerror(errno));
