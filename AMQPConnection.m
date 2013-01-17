@@ -22,6 +22,7 @@
 #import "amqp.h"
 #import "amqp_framing.h"
 #import <unistd.h>
+#import <netinet/tcp.h>
 
 #import "AMQPChannel.h"
 
@@ -60,10 +61,23 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 
 - (void)connectToHost:(NSString*)host onPort:(int)port
 {
+    
 	socketFD = amqp_open_socket([host UTF8String], port);
     fcntl(socketFD, F_SETFL, O_NONBLOCK);
     fcntl(socketFD, F_SETFL, O_ASYNC);
     fcntl(socketFD, F_SETNOSIGPIPE, 1);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // SETUP TCP KEEPALIVE
+    ////////////////////////////////////////////////////////////////////////////////
+//    int optval = 1;
+//    socklen_t optlen = sizeof(optval);
+//    if(setsockopt(socketFD, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0) {
+//        NSLog(@"<error: failed to set SO_KEEPALIVE>");
+//    }
+//    if(getsockopt(socketFD, SOL_SOCKET, SO_KEEPALIVE, &optval, &optlen) < 0) {
+//        NSLog(@"<error: failed to check value for SO_KEEPALIVE>");
+//    }
 	
 	if(socketFD < 0)
 	{
@@ -111,6 +125,23 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 	nextChannel++;
 
 	return [channel autorelease];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+- (void)checkConnection
+{
+    CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: checking connection...>", self);
+    
+    int result = -1;
+    char buffer[32];
+    result = recv(socketFD, &buffer, sizeof(buffer), MSG_PEEK | MSG_DONTWAIT);
+    if(result == 0) {
+        CTXLogError(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: connection closed!>", self);
+        return;
+    }
+    
+    CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: connection seems fine.>", self);
 }
 
 @end

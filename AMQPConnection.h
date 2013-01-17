@@ -50,4 +50,6 @@ extern NSString *const kAMQPOperationException;
 
 - (AMQPChannel *)openChannel;
 
+- (void)checkConnection;
+
 @end
