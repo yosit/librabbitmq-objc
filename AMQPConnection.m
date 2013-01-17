@@ -38,6 +38,7 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 
 @synthesize internalConnection = connection;
 
+
 - (id)init
 {
 	if(self = [super init])
@@ -62,6 +63,7 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 	socketFD = amqp_open_socket([host UTF8String], port);
     fcntl(socketFD, F_SETFL, O_NONBLOCK);
     fcntl(socketFD, F_SETFL, O_ASYNC);
+    fcntl(socketFD, F_SETNOSIGPIPE, 1);
 	
 	if(socketFD < 0)
 	{
