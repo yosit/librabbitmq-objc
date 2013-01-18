@@ -132,7 +132,7 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 ////////////////////////////////////////////////////////////////////////////////
 - (BOOL)checkConnection
 {
-    CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: checking connection...>", self);
+//    CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: checking connection...>", self);
     
     int result = -1;
     
@@ -155,7 +155,7 @@ NSString *const kAMQPOperationException     = @"AMQPException";
         return NO;
     }
     
-    CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: connection seems fine.>", self);
+//    CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: connection seems fine.>", self);
     return YES;
 }
 
