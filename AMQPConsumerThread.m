@@ -366,7 +366,7 @@ NSTimeInterval kCheckConnectionInterval = 30.0;
                 
                 if(_checkConnectionTimerFired) {
                     _checkConnectionTimerFired = NO;
-                    CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic: %@ :: heartbeat>", self, _topic);
+//                    CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic: %@ :: heartbeat>", self, _topic);
                     [_exchange publishMessage:@"Heartbeat" messageID:@"" payload:@"" usingRoutingKey:@"heartbeat"];
                     [_ttlManager addObject:kCheckConnectionToken ttl:kCheckConnectionInterval];
                 }
@@ -419,7 +419,7 @@ NSTimeInterval kCheckConnectionInterval = 30.0;
             CTXLogError(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic %@ :: frame #2 error (%d)>", self, _topic, result);
             goto HandleFrameError;
         }
-		
+		 
 		if(frame.frame_type != AMQP_FRAME_HEADER) {
             NSLog(@"frame.frame_type != AMQP_FRAME_HEADER");
 			return nil;
