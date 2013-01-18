@@ -361,13 +361,13 @@ NSTimeInterval kCheckConnectionInterval = 30.0;
                 
                 ret = select(sock+1, &read_flags, NULL, NULL, &timeout);
                 if(ret == -1) {
-                    NSLog(@"!!! select error %s !!!", strerror(errno));
+                    CTXLogError(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic %@ :: select() error (%s)>", self, _topic, strerror(errno));
                 }
                 
                 if(_checkConnectionTimerFired) {
                     _checkConnectionTimerFired = NO;
                     CTXLogVerbose(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic: %@ :: heartbeat>", self, _topic);
-                    [_exchange publishMessage:@"" messageID:@"" payload:@"" usingRoutingKey:@"heartbeat"];
+                    [_exchange publishMessage:@"Heartbeat" messageID:@"" payload:@"" usingRoutingKey:@"heartbeat"];
                     [_ttlManager addObject:kCheckConnectionToken ttl:kCheckConnectionInterval];
                 }
                 // TODO: ADD ERROR HANDLING HERE
@@ -399,7 +399,9 @@ NSTimeInterval kCheckConnectionInterval = 30.0;
         ////////////////////////////////////////////////////////////////////////////////
 		result = amqp_simple_wait_frame(connection, &frame);
 		if(result < 0) {
-            return nil;
+            CTXLogError(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic %@ :: frame #1 error (%d)>", self, _topic, result);
+            NSLog(@"frame #1 resut = %d", result);
+            goto HandleFrameError;
         }
 		
 		if(frame.frame_type != AMQP_FRAME_METHOD ||
@@ -414,11 +416,12 @@ NSTimeInterval kCheckConnectionInterval = 30.0;
         ////////////////////////////////////////////////////////////////////////////////
 		result = amqp_simple_wait_frame(connection, &frame);
 		if(result < 0) {
-            return nil;
+            CTXLogError(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic %@ :: frame #2 error (%d)>", self, _topic, result);
+            goto HandleFrameError;
         }
 		
 		if(frame.frame_type != AMQP_FRAME_HEADER) {
-//            NSLog(@"frame.frame_type != AMQP_FRAME_HEADER");
+            NSLog(@"frame.frame_type != AMQP_FRAME_HEADER");
 			return nil;
 		}
 		
@@ -434,11 +437,12 @@ NSTimeInterval kCheckConnectionInterval = 30.0;
 		while(receivedBytes < bodySize) {
 			result = amqp_simple_wait_frame(connection, &frame);
 			if(result < 0) {
-                return nil;
+                CTXLogError(CTXLogContextMessageBroker, @"<consumer_thread (%p) topic %@ :: frame #3 error (%d)>", self, _topic, result);
+                goto HandleFrameError;
             }
 			
 			if(frame.frame_type != AMQP_FRAME_BODY) {
-//                NSLog(@"frame.frame_type != AMQP_FRAME_BODY");
+                NSLog(@"frame.frame_type != AMQP_FRAME_BODY");
 				return nil;
 			}
 			
@@ -451,6 +455,12 @@ NSTimeInterval kCheckConnectionInterval = 30.0;
 	}
 	
 	return message;
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+    HandleFrameError:
+    [self cancel];
+    return nil;
 }
 
 @end
