@@ -23,6 +23,7 @@
 #import "amqp_framing.h"
 #import <unistd.h>
 #import <netinet/tcp.h>
+//#import <sys/poll.h>
 
 #import "AMQPChannel.h"
 
@@ -129,19 +130,33 @@ NSString *const kAMQPOperationException     = @"AMQPException";
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-- (void)checkConnection
+- (BOOL)checkConnection
 {
     CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: checking connection...>", self);
     
     int result = -1;
-    char buffer[32];
+    
+//    struct pollfd pfd;
+//    pfd.fd = socketFD;
+//    pfd.events = POLLIN | POLLHUP | POLLRDNORM;
+//    pfd.revents = 0;
+//    
+//    result = poll(&pfd, 1, 100);
+//    NSLog(@"poll result = %d", result);
+//    if(result <= 0) {
+//        return;
+//    }
+    
+    char buffer[128];
     result = recv(socketFD, &buffer, sizeof(buffer), MSG_PEEK | MSG_DONTWAIT);
-    if(result == 0) {
+    if(result >= 0) {
+        NSLog(@"result = %d", result);
         CTXLogError(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: connection closed!>", self);
-        return;
+        return NO;
     }
     
     CTXLogVerbose(CTXLogContextMessageBroker, @"<amqp_connection (%p) :: connection seems fine.>", self);
+    return YES;
 }
 
 @end
